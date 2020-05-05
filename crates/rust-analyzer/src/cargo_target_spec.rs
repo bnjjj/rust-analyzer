@@ -57,7 +57,7 @@ impl CargoTargetSpec {
                 }
                 extra_args.push("--nocapture".to_string());
             }
-            RunnableKind::DocTest { test_id } => {
+            RunnableKind::DocTest { test_id, .. } => {
                 args.push("test".to_string());
                 args.push("--doc".to_string());
                 if let Some(spec) = spec {

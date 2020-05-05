@@ -38,7 +38,7 @@ pub enum RunnableKind {
     Test { test_id: TestId, attr: TestAttr },
     TestMod { path: String },
     Bench { test_id: TestId },
-    DocTest { test_id: TestId },
+    DocTest { test_id: TestId, multiple: bool },
     Bin,
 }
 
@@ -83,8 +83,8 @@ fn runnable_fn(sema: &Semantics<RootDatabase>, fn_def: ast::FnDef) -> Option<Run
             RunnableKind::Test { test_id, attr }
         } else if fn_def.has_atom_attr("bench") {
             RunnableKind::Bench { test_id }
-        } else if has_doc_test(&fn_def) {
-            RunnableKind::DocTest { test_id }
+        } else if let Some(nb_delimiter_doc_test) = count_delimitter_doc_test(&fn_def) {
+            RunnableKind::DocTest { test_id, multiple: nb_delimiter_doc_test > 2 }
         } else {
             return None;
         }
@@ -121,8 +121,8 @@ fn has_test_related_attribute(fn_def: &ast::FnDef) -> bool {
         .any(|attribute_text| attribute_text.contains("test"))
 }
 
-fn has_doc_test(fn_def: &ast::FnDef) -> bool {
-    fn_def.doc_comment_text().map_or(false, |comment| comment.contains("```"))
+fn count_delimitter_doc_test(fn_def: &ast::FnDef) -> Option<usize> {
+    fn_def.doc_comment_text().map(|comment| comment.matches("```").map(|_| ()).count())
 }
 
 fn runnable_mod(sema: &Semantics<RootDatabase>, module: ast::Module) -> Option<Runnable> {
